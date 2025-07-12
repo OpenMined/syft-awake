@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.2.9"
+__version__ = "0.3.0"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
@@ -177,22 +177,35 @@ class _NetworkStatus:
         """Display network status as HTML table."""
         try:
             # Import within method to avoid circular imports
-            from .client import ping_network_summary as _ping_network_summary
-            network_summary = _ping_network_summary()
+            from .client import ping_network as _ping_network
+            responses = _ping_network(timeout=5)
+            
+            # Calculate statistics from responses
+            total_users = len(responses)
+            awake_users = [r for r in responses if r.status.value == "awake"]
+            awake_count = len(awake_users)
+            awake_percentage = (awake_count / total_users * 100) if total_users > 0 else 0
+            
+            # Count countries
+            countries = {}
+            for response in responses:
+                if response.status.value == "awake" and hasattr(response, 'country') and response.country:
+                    countries[response.country] = countries.get(response.country, 0) + 1
             
             # Generate table rows
             table_rows = ""
-            for i, user in enumerate(network_summary.users):
-                status_color = "#10b981" if user.is_awake else "#ef4444"
-                status_text = "✓ Awake" if user.is_awake else "✗ Offline"
-                status_bg = "#dcfce7" if user.is_awake else "#fee2e2"
-                country_text = user.country or "Unknown"
+            for i, response in enumerate(responses):
+                is_awake = response.status.value == "awake"
+                status_color = "#10b981" if is_awake else "#ef4444"
+                status_text = "✓ Awake" if is_awake else "✗ Offline"
+                status_bg = "#dcfce7" if is_awake else "#fee2e2"
+                country_text = getattr(response, 'country', None) or "Unknown"
                 
                 table_rows += f"""
                     <tr style="border-bottom: 1px solid #e5e7eb;">
                         <td style="padding: 0.75rem 1rem; text-align: center;">{i}</td>
                         <td style="padding: 0.75rem 1rem;">
-                            <div style="font-weight: 500; color: #111827;">{user.email}</div>
+                            <div style="font-weight: 500; color: #111827;">{response.responder}</div>
                         </td>
                         <td style="padding: 0.75rem 1rem;">
                             <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: {status_bg}; color: {status_color}; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500;">
@@ -214,7 +227,7 @@ class _NetworkStatus:
             
             # Generate country summary
             country_badges = ""
-            for country, count in network_summary.countries.items():
+            for country, count in countries.items():
                 country_badges += f"""
                     <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: #e5e7eb; border-radius: 0.25rem; font-size: 0.75rem; margin-right: 0.5rem;">
                         {country}: {count}
@@ -232,10 +245,10 @@ class _NetworkStatus:
                             </div>
                             <div style="display: flex; gap: 1rem; align-items: center;">
                                 <span style="font-size: 0.875rem; color: #374151;">
-                                    <strong>{network_summary.awake_count}</strong> of <strong>{network_summary.total_users}</strong> awake
+                                    <strong>{awake_count}</strong> of <strong>{total_users}</strong> awake
                                 </span>
                                 <div style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 500;">
-                                    {network_summary.awake_percentage:.1f}% Online
+                                    {awake_percentage:.1f}% Online
                                 </div>
                             </div>
                         </div>

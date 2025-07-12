@@ -155,6 +155,5 @@ def discover_network_members() -> List[str]:
 # Define what should be public from this module
 __all__ = [
     "ping_user",
-    "ping_network",
-    "ping_network_summary",
+    "ping_network"
 ]
