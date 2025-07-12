@@ -15,6 +15,13 @@ from loguru import logger
 from .client import ping_user, ping_network, get_awake_users, is_awake
 from .discovery import add_known_user, remove_known_user, discover_network_members
 from .models import AwakeStatus
+from .auto_install import (
+    ensure_syftbox_app_installed, 
+    reinstall_syftbox_app, 
+    is_syftbox_app_installed,
+    is_syftbox_running,
+    get_syftbox_apps_path
+)
 
 
 def cmd_ping(args):
@@ -177,6 +184,84 @@ def cmd_who_awake(args):
     return 0
 
 
+def cmd_install_app(args):
+    """Install syft-awake app to SyftBox."""
+    print("🚀 Installing syft-awake app to SyftBox...")
+    
+    if not get_syftbox_apps_path():
+        print("❌ SyftBox not found. Please install SyftBox first.")
+        return 1
+    
+    if not is_syftbox_running():
+        print("❌ SyftBox is not running. Please start SyftBox first.")
+        return 1
+    
+    if is_syftbox_app_installed():
+        print("✅ syft-awake app is already installed")
+        return 0
+    
+    if ensure_syftbox_app_installed(silent=False):
+        print("✅ syft-awake app installed successfully")
+        print("📝 App will automatically start with SyftBox")
+        return 0
+    else:
+        print("❌ Failed to install syft-awake app")
+        return 1
+
+
+def cmd_reinstall_app(args):
+    """Reinstall syft-awake app."""
+    print("🔄 Reinstalling syft-awake app...")
+    
+    if not get_syftbox_apps_path():
+        print("❌ SyftBox not found. Please install SyftBox first.")
+        return 1
+    
+    if reinstall_syftbox_app(silent=False):
+        print("✅ syft-awake app reinstalled successfully")
+        return 0
+    else:
+        print("❌ Failed to reinstall syft-awake app")
+        return 1
+
+
+def cmd_app_status(args):
+    """Check syft-awake app installation status."""
+    print("📋 SyftBox App Status:")
+    
+    apps_path = get_syftbox_apps_path()
+    if not apps_path:
+        print("   SyftBox: ❌ Not found")
+        print("   Install SyftBox to enable awakeness monitoring")
+        return 0
+    
+    print(f"   SyftBox: ✅ Found at {apps_path.parent}")
+    
+    if is_syftbox_running():
+        print("   SyftBox Status: ✅ Running")
+    else:
+        print("   SyftBox Status: ❌ Not running")
+        return 0
+    
+    if is_syftbox_app_installed():
+        print("   syft-awake App: ✅ Installed")
+        app_path = apps_path / "syft-awake"
+        print(f"   App Location: {app_path}")
+        
+        # Check if run.sh exists and is executable
+        run_sh = app_path / "run.sh"
+        if run_sh.exists() and run_sh.stat().st_mode & 0o111:
+            print("   run.sh: ✅ Executable")
+        else:
+            print("   run.sh: ❌ Missing or not executable")
+        
+    else:
+        print("   syft-awake App: ❌ Not installed")
+        print("   Run 'syft-awake install' to install the app")
+    
+    return 0
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -233,6 +318,16 @@ def main():
     # Quick status commands
     who_parser = subparsers.add_parser("who-awake", help="Show who is currently awake")
     who_parser.set_defaults(func=cmd_who_awake)
+    
+    # App management commands
+    install_parser = subparsers.add_parser("install", help="Install syft-awake app to SyftBox")
+    install_parser.set_defaults(func=cmd_install_app)
+    
+    reinstall_parser = subparsers.add_parser("reinstall", help="Reinstall syft-awake app")
+    reinstall_parser.set_defaults(func=cmd_reinstall_app)
+    
+    status_parser = subparsers.add_parser("app-status", help="Check syft-awake app installation status")
+    status_parser.set_defaults(func=cmd_app_status)
     
     # Parse arguments
     args = parser.parse_args()

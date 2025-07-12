@@ -18,12 +18,39 @@ Syft Awake allows SyftBox network members to ping each other to check if they're
 
 ### Installation
 
-1. Clone or copy the `syft-awake` directory to your SyftBox apps folder:
+**Option 1: Auto-Installation (Recommended)**
+
+Simply install and import the Python library - it will automatically install the SyftBox app when SyftBox is detected:
+
 ```bash
-cp -r syft-awake ~/SyftBox/apps/
+pip install syft-awake
+# or: uv add syft-awake
 ```
 
-2. SyftBox will automatically detect and start the awakeness server.
+```python
+import syft_awake as sa  # Automatically installs to ~/SyftBox/apps/syft-awake
+```
+
+**Option 2: Manual Installation**
+
+```bash
+# Clone to SyftBox apps directory
+git clone https://github.com/iamtrask/syft-awake.git ~/SyftBox/apps/syft-awake
+
+# Or use the CLI
+syft-awake install
+```
+
+**Option 3: Development Installation**
+
+```bash
+# Clone for development
+git clone https://github.com/iamtrask/syft-awake.git
+cd syft-awake
+uv sync
+```
+
+The SyftBox app will automatically start with SyftBox and begin responding to awakeness pings.
 
 ### Using the Python Library
 
@@ -68,6 +95,11 @@ syft-awake add-user mentor@example.com
 
 # Check specific users
 syft-awake check colleague@example.com,mentor@example.com
+
+# App management
+syft-awake app-status    # Check installation status
+syft-awake install      # Install app to SyftBox
+syft-awake reinstall    # Reinstall/update app
 ```
 
 ## How It Works

@@ -449,11 +449,12 @@ wheels = [
 
 [[package]]
 name = "syft-awake"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "loguru" },
     { name = "pydantic" },
+    { name = "pytest" },
     { name = "syft-core" },
     { name = "syft-event" },
     { name = "syft-rpc" },
@@ -471,6 +472,7 @@ dev = [
 requires-dist = [
     { name = "loguru", specifier = ">=0.7.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.1.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3.0" },
