@@ -95,8 +95,8 @@ def ping_user(
             priority=priority
         )
         
-        # Construct the RPC URL for the target user
-        url = f"syft://{user_email}/api_data/syft-awake/rpc/awake"
+        # Construct the RPC URL for the target user using rpc.make_url()
+        url = rpc.make_url(datasite=user_email, app_name="syft-awake", endpoint="awake")
         
         logger.info(f"📤 Pinging {user_email} with message: '{message}'")
         logger.debug(f"🔗 RPC URL: {url}")
