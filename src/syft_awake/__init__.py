@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:

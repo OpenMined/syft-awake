@@ -77,6 +77,9 @@ class AwakeServer:
             self.app_data_dir = self.syftbox_client.app_data("syft-awake")
             self.app_data_dir.mkdir(parents=True, exist_ok=True)
             
+            # Create permissions file in api_data directory for RPC syncing
+            self.setup_api_permissions()
+            
             # User's awakeness configuration
             self.config_file = self.app_data_dir / "awake_config.json"
             self.load_config()
@@ -132,6 +135,48 @@ class AwakeServer:
                 json.dump(self.config, f, indent=2)
         except Exception as e:
             logger.error(f"Error saving config: {e}")
+    
+    def setup_api_permissions(self):
+        """Set up permissions file in api_data directory for RPC syncing."""
+        try:
+            # Get the api_data directory path
+            home = Path.home()
+            api_data_dir = home / "SyftBox" / "datasites" / self.email / "api_data" / "syft-awake"
+            api_data_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Create syft.pub.yaml in api_data directory
+            permissions_file = api_data_dir / "syft.pub.yaml"
+            
+            if not permissions_file.exists():
+                permissions_content = """rules:
+- pattern: 'rpc/rpc.schema.json'
+  access:
+    read:
+    - '*'
+- pattern: 'rpc/**/*.request'
+  access:
+    read:
+    - '*'
+    write:
+    - '*'
+    admin:
+    - '*'
+- pattern: 'rpc/**/*.response'
+  access:
+    read:
+    - '*'
+    write:
+    - '*'
+    admin:
+    - '*'
+"""
+                permissions_file.write_text(permissions_content)
+                logger.info(f"✅ Created permissions file at {permissions_file}")
+            else:
+                logger.debug(f"Permissions file already exists at {permissions_file}")
+                
+        except Exception as e:
+            logger.error(f"Failed to set up API permissions: {e}")
     
     def register_handlers(self):
         """Register RPC endpoint handlers."""
