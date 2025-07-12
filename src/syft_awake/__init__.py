@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
@@ -33,28 +33,126 @@ __all__ = [
 # Add _repr_html_ for Jupyter notebook display
 def _repr_html_():
     """Display HTML representation of syft_awake module in Jupyter notebooks."""
-    return """
-    <div style="border: 2px solid #007ACC; border-radius: 8px; padding: 20px; background-color: #f0f8ff; font-family: Arial, sans-serif;">
-        <h2 style="color: #007ACC; margin-top: 0;">🌐 Syft Awake v{version}</h2>
-        <p style="color: #333; font-size: 16px;">Network awakeness monitoring for SyftBox</p>
-        <div style="margin-top: 15px;">
-            <h3 style="color: #005999;">Available Functions:</h3>
-            <ul style="list-style-type: none; padding-left: 0;">
-                <li style="margin: 8px 0;">
-                    <code style="background-color: #e8f4f8; padding: 4px 8px; border-radius: 4px;">ping_user(email)</code> 
-                    - Check if a specific user is online
-                </li>
-                <li style="margin: 8px 0;">
-                    <code style="background-color: #e8f4f8; padding: 4px 8px; border-radius: 4px;">ping_network()</code> 
-                    - Check status of all network members
-                </li>
-            </ul>
+    # Try to get network status
+    try:
+        network_summary = ping_network()
+        
+        # Generate table rows
+        table_rows = ""
+        for i, user in enumerate(network_summary.users):
+            status_color = "#10b981" if user.is_awake else "#ef4444"
+            status_text = "✓ Awake" if user.is_awake else "✗ Offline"
+            status_bg = "#dcfce7" if user.is_awake else "#fee2e2"
+            country_text = user.country or "Unknown"
+            
+            table_rows += f"""
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 0.75rem 1rem; text-align: center;">{i}</td>
+                    <td style="padding: 0.75rem 1rem;">
+                        <div style="font-weight: 500; color: #111827;">{user.email}</div>
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">
+                        <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: {status_bg}; color: {status_color}; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 500;">
+                            {status_text}
+                        </span>
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.25rem; color: #6b7280;">
+                            <svg style="width: 1rem; height: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M2 12h20"></path>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                            <span>{country_text}</span>
+                        </div>
+                    </td>
+                </tr>
+            """
+        
+        # Generate country summary
+        country_badges = ""
+        for country, count in network_summary.countries.items():
+            country_badges += f"""
+                <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; background: #e5e7eb; border-radius: 0.25rem; font-size: 0.75rem; margin-right: 0.5rem;">
+                    {country}: {count}
+                </span>
+            """
+        
+        return f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff;">
+            <div style="border: 1px solid #e5e7eb; border-radius: 0.375rem; overflow: hidden;">
+                <div style="background: #f3f4f6; padding: 1rem 1.25rem; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <h2 style="font-size: 1.125rem; font-weight: 600; color: #111827; margin: 0;">🌐 Syft Awake Network Status</h2>
+                            <span style="font-size: 0.75rem; color: #6b7280;">v{__version__}</span>
+                        </div>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <span style="font-size: 0.875rem; color: #374151;">
+                                <strong>{network_summary.awake_count}</strong> of <strong>{network_summary.total_users}</strong> awake
+                            </span>
+                            <div style="background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.875rem; font-weight: 500;">
+                                {network_summary.awake_percentage:.1f}% Online
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 500; color: #374151; width: 3rem;">#</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 500; color: #374151;">Email</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 500; color: #374151;">Status</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left; font-weight: 500; color: #374151;">Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="background: #f9fafb; padding: 1rem 1.25rem; border-top: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; color: #6b7280;">Countries:</span>
+                            {country_badges if country_badges else '<span style="font-size: 0.75rem; color: #9ca3af;">Location data not available</span>'}
+                        </div>
+                        <span style="font-size: 0.75rem; color: #9ca3af;">
+                            Fast, secure awakeness monitoring for SyftBox
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div style="margin-top: 15px; font-size: 14px; color: #666;">
-            <em>Fast, secure awakeness monitoring for the SyftBox network</em>
+        """
+    except Exception as e:
+        # Fallback to simple display if ping_network fails
+        return f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #ffffff;">
+            <div style="border: 1px solid #e5e7eb; border-radius: 0.375rem; overflow: hidden;">
+                <div style="background: #fee2e2; padding: 1rem 1.25rem; text-align: center;">
+                    <h3 style="color: #991b1b; margin: 0;">Network Status Unavailable</h3>
+                    <p style="color: #7f1d1d; margin-top: 0.5rem; font-size: 0.875rem;">Unable to fetch network status. Please check your SyftBox connection.</p>
+                </div>
+                <div style="background: #f3f4f6; padding: 1rem 1.25rem; border-top: 1px solid #e5e7eb;">
+                    <h3 style="font-size: 1rem; font-weight: 600; color: #111827; margin-bottom: 0.75rem;">Available Functions:</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div>
+                            <code style="background-color: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;">ping_user(email)</code>
+                            <span style="color: #6b7280; margin-left: 0.5rem;">- Check if a specific user is online</span>
+                        </div>
+                        <div>
+                            <code style="background-color: #e5e7eb; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;">ping_network()</code>
+                            <span style="color: #6b7280; margin-left: 0.5rem;">- Check status of all network members</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    """.format(version=__version__)
+        """
 
 import sys as _sys
 _this_module = _sys.modules[__name__]
