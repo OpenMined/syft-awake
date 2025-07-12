@@ -87,24 +87,38 @@ class NetworkDiscovery:
         """
         Discover users from SyftBox network structures.
         
-        This would examine SyftBox's network topology, datasites,
-        or other discovery mechanisms to find active network members.
+        Scans the SyftBox datasites directory to find users who have 
+        syft-awake installed by looking for app_data/syft-awake directories.
         """
         discovered = []
         
         try:
-            # TODO: Implement actual SyftBox network discovery
-            # This would depend on SyftBox's actual network structure
-            # For example:
-            # - Scanning datasites directory
-            # - Querying network registry
-            # - Looking at recent RPC traffic
-            # - Examining syft-event logs
+            logger.info("🔍 Scanning SyftBox datasites for syft-awake installations...")
             
-            logger.info("🔍 Attempting SyftBox network discovery...")
+            # Get the SyftBox datasites directory path
+            home_path = Path.home()
+            datasites_path = home_path / "SyftBox" / "datasites"
             
-            # For now, return empty list - users can manually add contacts
-            # or we can implement specific discovery mechanisms later
+            if not datasites_path.exists():
+                logger.debug(f"SyftBox datasites directory not found: {datasites_path}")
+                return discovered
+            
+            # Scan each datasite for syft-awake app installation
+            for datasite_dir in datasites_path.iterdir():
+                if not datasite_dir.is_dir():
+                    continue
+                
+                # Check if this user has syft-awake installed
+                syft_awake_path = datasite_dir / "app_data" / "syft-awake"
+                if syft_awake_path.exists() and syft_awake_path.is_dir():
+                    user_email = datasite_dir.name
+                    
+                    # Skip ourselves
+                    if user_email != self.client.email:
+                        discovered.append(user_email)
+                        logger.debug(f"Found syft-awake installation for: {user_email}")
+            
+            logger.info(f"📡 Discovered {len(discovered)} users with syft-awake installed")
             
         except Exception as e:
             logger.warning(f"SyftBox network discovery failed: {e}")
