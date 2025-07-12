@@ -1,77 +1,76 @@
 # Syft Awake 🚀
 
-Fast, secure network awakeness monitoring for SyftBox - ping network members to see who's online and ready for interactive queries.
+See who's online and ready to collaborate in your SyftBox network
+
+## What is it?
+
+Syft Awake helps coordinate live collaboration on [SyftBox](https://www.syftbox.net/) - the open-source platform for privacy-first AI development. Check who's online before starting federated learning experiments, research sessions, or collaborative development.
 
 ## Quick Start
 
-### Installation
 ```bash
 pip install syft-awake
 ```
 
-### Usage
 ```python
 import syft_awake as sa
 
-# Ping a specific user
-response = sa.ping_user("friend@example.com", "Are you free for a call?")
-if response and response.status == sa.AwakeStatus.AWAKE:
-    print(f"{response.responder} is awake: {response.message}")
+# Ping someone to see if they're online
+response = sa.ping_user("colleague@university.edu")
+if response:
+    print(f"{response.responder} is {response.status}")
 
-# Scan the entire network (auto-discovers users with syft-awake)
-summary = sa.ping_network()
-print(f"Network awakeness: {summary.awakeness_ratio:.1%}")
-for user in summary.awake_users:
-    print(f"✅ {user} is awake")
+# Find everyone who's currently online
+responses = sa.ping_network()
+online_now = [r.responder for r in responses]
+print(f"Online: {', '.join(online_now)}")
 ```
-
-## What It Does
-
-**Auto-Installation**: Simply importing the library automatically installs the SyftBox app to respond to pings.
-
-**Network Discovery**: Automatically finds other SyftBox users who have syft-awake installed by scanning the local datasites directory.
-
-**Real-time Status**: Get detailed availability info including status (awake/busy/sleeping), workload level, and capabilities.
-
-## API
-
-### Core Functions
-
-**`ping_user(email, message="ping")`** - Ping a specific user  
-**`ping_network(user_emails=None)`** - Ping multiple users (auto-discovers if no list provided)
-
-### Status Types
-- `AwakeStatus.AWAKE` - Available for interaction  
-- `AwakeStatus.BUSY` - Available but occupied
-- `AwakeStatus.SLEEPING` - Not available
 
 ## Use Cases
 
-**Team Collaboration**
+**🧪 Research Coordination**
 ```python
-# Check if team is available before starting a meeting
-team_emails = ["alice@company.com", "bob@company.com"]  
-summary = sa.ping_network(user_emails=team_emails)
-if summary.awakeness_ratio > 0.5:
-    print("Enough people online for the meeting!")
+# Check if collaborators are available before starting experiments
+research_team = ["alice@university.edu", "bob@lab.org"]
+responses = sa.ping_network(research_team)
+if len(responses) >= 2:
+    print("Enough researchers online - let's start the federated learning!")
 ```
 
-**Distributed Computing**
+**🤝 Live Development Sessions**
 ```python
-# Find available compute nodes
-summary = sa.ping_network()
-light_workload_users = [
-    user for user in summary.awake_users 
-    if sa.ping_user(user).workload == "light"
-]
+# See who's available for pair programming or code review
+responses = sa.ping_network()
+for r in responses:
+    if "development" in r.capabilities:
+        print(f"{r.responder} is available for development work")
 ```
+
+**📊 Distributed Computing**
+```python
+# Find compute nodes with light workload for your job
+responses = sa.ping_network()
+available_nodes = [r for r in responses if r.workload == "light"]
+print(f"Found {len(available_nodes)} available compute nodes")
+```
+
+## API
+
+Just two simple functions:
+
+**`ping_user(email, timeout=30)`** → `AwakeResponse` or `None`  
+**`ping_network(emails=None, timeout=15)`** → `List[AwakeResponse]`
+
+Auto-installs and auto-discovers network members. Works silently in the background.
 
 ## How It Works
 
-- **Server**: Each user runs a small SyftBox app that responds to awakeness pings
-- **Client**: Use this Python library to ping users and scan the network  
-- **Security**: Uses SyftBox's authenticated, file-based RPC system
-- **Discovery**: Automatically finds users by scanning `/SyftBox/datasites/*/app_data/syft-awake`
+- **Automatic**: Simply importing the library installs the SyftBox app
+- **Private**: Uses SyftBox's secure, file-based communication  
+- **Decentralized**: No central servers - direct peer-to-peer pings
+- **Smart Discovery**: Finds other users by scanning your local SyftBox network
+
+Perfect for coordinating real-time collaboration in privacy-preserving AI research and development.
 
 ## License
 
