@@ -53,22 +53,18 @@ except ImportError:
     SyftBoxClient = MockSyftBoxClient
     rpc = MockRPC()
 
-from .models import AwakeRequest, AwakeResponse, AwakeStatus, NetworkAwakenessSummary
+from .models import AwakeRequest, AwakeResponse, AwakeStatus
 
 
 def ping_user(
-    user_email: str, 
-    message: str = "ping",
-    priority: str = "normal",
+    user_email: str,
     timeout: int = 30
 ) -> Optional[AwakeResponse]:
     """
-    Ping a specific user to check if they're awake.
+    Ping a user to check if they're awake.
     
     Args:
         user_email: Email of the user to ping
-        message: Optional message to send with the ping
-        priority: Priority level (low, normal, high)
         timeout: Timeout in seconds to wait for response
     
     Returns:
@@ -76,9 +72,9 @@ def ping_user(
     
     Example:
         >>> import syft_awake as sa
-        >>> response = sa.ping_user("friend@example.com", "Are you free for a quick call?")
-        >>> if response and response.status == sa.AwakeStatus.AWAKE:
-        ...     print(f"{response.responder} is awake: {response.message}")
+        >>> response = sa.ping_user("friend@example.com")
+        >>> if response:
+        ...     print(f"{response.responder} is {response.status}")
     """
     try:
         client = SyftBoxClient.load()
@@ -86,8 +82,8 @@ def ping_user(
         # Create the awakeness ping request
         request = AwakeRequest(
             requester=client.email,
-            message=message,
-            priority=priority
+            message="ping",
+            priority="normal"
         )
         
         # Construct the RPC URL for the target user using rpc.make_url()
@@ -113,68 +109,40 @@ def ping_user(
 
 def ping_network(
     user_emails: Optional[List[str]] = None,
-    message: str = "network scan",
-    timeout: int = 15,
-    max_concurrent: int = 10
-) -> NetworkAwakenessSummary:
+    timeout: int = 15
+) -> List[AwakeResponse]:
     """
-    Ping multiple users concurrently to check network awakeness.
+    Ping multiple users. Returns list of successful responses.
     
     Args:
         user_emails: List of emails to ping (if None, discovers from known contacts)
-        message: Message to send with pings
         timeout: Timeout per ping in seconds
-        max_concurrent: Maximum concurrent pings
     
     Returns:
-        NetworkAwakenessSummary with results
+        List of AwakeResponse objects from users who responded
     
     Example:
         >>> import syft_awake as sa
-        >>> summary = sa.ping_network()
-        >>> print(f"Network awakeness: {summary.awakeness_ratio:.1%}")
-        >>> for user in summary.awake_users:
-        ...     print(f"✅ {user} is awake")
+        >>> responses = sa.ping_network()
+        >>> for response in responses:
+        ...     print(f"{response.responder} is {response.status}")
     """
-    start_time = time.time()
-    
     # If no user list provided, try to discover known contacts
     if user_emails is None:
         user_emails = discover_network_members()
     
-    awake_users = []
-    sleeping_users = []
-    non_responsive = []
+    responses = []
     
-    # TODO: Implement concurrent pinging for better performance
-    # For now, ping sequentially to keep it simple
+    # Ping users sequentially and collect successful responses
     for user_email in user_emails:
         try:
-            response = ping_user(user_email, message=message, timeout=timeout)
-            
-            if response is None:
-                non_responsive.append(user_email)
-            elif response.status == AwakeStatus.AWAKE:
-                awake_users.append(user_email)
-            else:
-                sleeping_users.append(user_email)
-                
+            response = ping_user(user_email, timeout=timeout)
+            if response is not None:
+                responses.append(response)
         except Exception:
-            non_responsive.append(user_email)
+            continue
     
-    scan_duration = (time.time() - start_time) * 1000
-    
-    summary = NetworkAwakenessSummary(
-        total_pinged=len(user_emails),
-        awake_count=len(awake_users),
-        response_count=len(awake_users) + len(sleeping_users),
-        awake_users=awake_users,
-        sleeping_users=sleeping_users,
-        non_responsive=non_responsive,
-        scan_duration_ms=scan_duration
-    )
-    
-    return summary
+    return responses
 
 
 def discover_network_members() -> List[str]:
