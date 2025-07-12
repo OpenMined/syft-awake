@@ -5,30 +5,39 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.1.9"
+__version__ = "0.1.12"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
-    from .auto_install import auto_install as _auto_install, show_startup_banner as _show_startup_banner
-    _auto_install()
-    
-    # Only show banner in interactive environments
-    import sys as _sys
-    if hasattr(_sys, 'ps1') or _sys.flags.interactive:
-        _show_startup_banner()
+    import importlib
+    _auto_mod = importlib.import_module('.auto_install', package=__name__)
+    _auto_mod.auto_install()
+    del importlib, _auto_mod
 except Exception:
-    # Don't let auto-install errors prevent import
     pass
 
-# Import main functions for easy access
-from .client import ping_user, ping_network
-from .models import AwakeStatus
+# Import core functions only - use importlib to avoid namespace pollution
+import importlib as _importlib
+_client_mod = _importlib.import_module('.client', package=__name__)
+
+ping_user = _client_mod.ping_user
+ping_network = _client_mod.ping_network
+
+del _importlib, _client_mod
 
 __all__ = [
     "ping_user",
-    "ping_network", 
-    "AwakeStatus",
+    "ping_network",
 ]
 
-# Expose auto-install functions for manual use
-from .auto_install import ensure_syftbox_app_installed, reinstall_syftbox_app
+# Clean up namespace completely
+import sys as _sys
+_this_module = _sys.modules[__name__]
+_all_names = list(globals().keys())
+for _name in _all_names:
+    if _name not in __all__ and not _name.startswith('_') and _name not in ['__doc__', '__file__', '__name__', '__package__', '__path__', '__spec__', '__version__']:
+        try:
+            delattr(_this_module, _name)
+        except (AttributeError, ValueError):
+            pass
+del _sys, _this_module, _all_names, _name

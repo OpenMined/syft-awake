@@ -9,15 +9,12 @@ import time
 from datetime import datetime, timezone
 from typing import List, Dict, Optional, Set
 from pathlib import Path
-from loguru import logger
 
 # SyftBox integration
 try:
     from syft_core import Client as SyftBoxClient
     from syft_rpc import rpc
-except ImportError as e:
-    logger.warning(f"SyftBox dependencies not available: {e}")
-    logger.warning("Some functions will work in demo mode only")
+except ImportError:
     
     # Mock classes for development/testing
     class MockSyftBoxClient:
@@ -31,8 +28,6 @@ except ImportError as e:
     class MockRPC:
         @staticmethod
         def send(url, body, expiry="30s", cache=False):
-            logger.info(f"Mock RPC send to {url}")
-            
             class MockFuture:
                 def wait(self, timeout=30):
                     # Simulate some response delay
@@ -98,92 +93,22 @@ def ping_user(
         # Construct the RPC URL for the target user using rpc.make_url()
         url = rpc.make_url(datasite=user_email, app_name="syft-awake", endpoint="awake")
         
-        logger.info(f"📤 Pinging {user_email} with message: '{message}'")
-        logger.debug(f"🔗 RPC URL: {url}")
-        
-        # Send the RPC request  
-        # Note: pingpong uses dataclass directly, let's try that approach
-        logger.debug(f"📋 Request body: {request}")
-        
         future = rpc.send(
             url=url,
-            body=request,  # Send the Pydantic model directly like pingpong
+            body=request,
             expiry="30s",
-            cache=False  # Always get fresh awakeness status
+            cache=False
         )
         
-        logger.debug(f"🔮 Future created, waiting for response...")
-        
-        # Wait for response
         response = future.wait(timeout=timeout)
-        
-        logger.debug(f"📥 Response status: {getattr(response, 'status_code', 'unknown')}")
-        logger.debug(f"📄 Raw response: {getattr(response, 'text', str(response))}")
-        
         response.raise_for_status()
         
         # Parse the response
         awake_response = response.model(AwakeResponse)
-        
-        logger.info(f"✅ {user_email} responded: {awake_response.status}")
         return awake_response
         
-    except Exception as e:
-        error_msg = str(e)
-        
-        # Provide more helpful error messages for common scenarios
-        if "404" in error_msg or "not found" in error_msg.lower():
-            logger.info(f"📭 {user_email} is not running syft-awake (no awakeness endpoint found)")
-        elif "timeout" in error_msg.lower():
-            logger.info(f"⏰ {user_email} did not respond within {timeout}s")
-        elif "connection" in error_msg.lower():
-            logger.info(f"🔌 Could not connect to {user_email} (may be offline)")
-        else:
-            logger.warning(f"Failed to ping {user_email}: {e}")
-        
+    except Exception:
         return None
-
-
-def has_syft_awake(user_email: str, timeout: int = 5) -> bool:
-    """
-    Check if a user has syft-awake installed and running.
-    
-    Args:
-        user_email: Email of the user to check
-        timeout: Timeout in seconds
-    
-    Returns:
-        True if user has syft-awake endpoint available, False otherwise
-    
-    Example:
-        >>> import syft_awake as sa
-        >>> if sa.has_syft_awake("friend@example.com"):
-        ...     response = sa.ping_user("friend@example.com")
-        ... else:
-        ...     print("They don't have syft-awake installed")
-    """
-    response = ping_user(user_email, message="endpoint_check", timeout=timeout)
-    return response is not None
-
-
-def is_awake(user_email: str, timeout: int = 10) -> bool:
-    """
-    Quick check if a user is awake (simplified version of ping_user).
-    
-    Args:
-        user_email: Email of the user to check
-        timeout: Timeout in seconds
-    
-    Returns:
-        True if user is awake, False otherwise
-    
-    Example:
-        >>> import syft_awake as sa
-        >>> if sa.is_awake("colleague@example.com"):
-        ...     print("They're online!")
-    """
-    response = ping_user(user_email, message="quick_check", timeout=timeout)
-    return response is not None and response.status == AwakeStatus.AWAKE
 
 
 def ping_network(
@@ -217,8 +142,6 @@ def ping_network(
     if user_emails is None:
         user_emails = discover_network_members()
     
-    logger.info(f"🌐 Scanning network awakeness for {len(user_emails)} users")
-    
     awake_users = []
     sleeping_users = []
     non_responsive = []
@@ -236,8 +159,7 @@ def ping_network(
             else:
                 sleeping_users.append(user_email)
                 
-        except Exception as e:
-            logger.warning(f"Error pinging {user_email}: {e}")
+        except Exception:
             non_responsive.append(user_email)
     
     scan_duration = (time.time() - start_time) * 1000
@@ -252,78 +174,17 @@ def ping_network(
         scan_duration_ms=scan_duration
     )
     
-    logger.info(f"📊 Network scan complete: {summary.awake_count}/{summary.total_pinged} awake")
-    logger.info(f"⏱️  Scan took {scan_duration:.1f}ms")
-    
     return summary
 
 
-def get_awake_users(user_emails: Optional[List[str]] = None, timeout: int = 15) -> List[str]:
-    """
-    Get a list of users who are currently awake.
-    
-    Args:
-        user_emails: List of emails to check (if None, discovers from known contacts)
-        timeout: Timeout per ping in seconds
-    
-    Returns:
-        List of email addresses for users who are awake
-    
-    Example:
-        >>> import syft_awake as sa
-        >>> awake_users = sa.get_awake_users()
-        >>> print(f"Online now: {', '.join(awake_users)}")
-    """
-    summary = ping_network(user_emails=user_emails, timeout=timeout)
-    return summary.awake_users
-
-
 def discover_network_members() -> List[str]:
-    """
-    Discover other SyftBox network members to ping.
-    
-    Returns:
-        List of discovered user email addresses
-    """
+    """Discover other SyftBox network members to ping."""
     from .discovery import discover_network_members as _discover
     return _discover()
 
 
-def ping_with_retry(
-    user_email: str,
-    message: str = "ping",
-    max_retries: int = 3,
-    retry_delay: float = 1.0
-) -> Optional[AwakeResponse]:
-    """
-    Ping a user with automatic retries for better reliability.
-    
-    Args:
-        user_email: Email of the user to ping
-        message: Message to send with ping
-        max_retries: Maximum number of retry attempts
-        retry_delay: Delay between retries in seconds
-    
-    Returns:
-        AwakeResponse if successful, None if all retries failed
-    """
-    for attempt in range(max_retries + 1):
-        try:
-            response = ping_user(user_email, message=message)
-            if response is not None:
-                return response
-            
-        except Exception as e:
-            logger.warning(f"Ping attempt {attempt + 1} failed for {user_email}: {e}")
-        
-        if attempt < max_retries:
-            logger.info(f"Retrying in {retry_delay}s...")
-            time.sleep(retry_delay)
-    
-    logger.error(f"All ping attempts failed for {user_email}")
-    return None
-
-
-# Convenience aliases for shorter import
-ping = ping_user
-scan = ping_network
+# Define what should be public from this module
+__all__ = [
+    "ping_user",
+    "ping_network",
+]

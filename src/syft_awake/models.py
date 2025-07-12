@@ -7,6 +7,10 @@ from enum import Enum
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field
 
+__all__ = [
+    "AwakeStatus",
+]
+
 
 class AwakeStatus(str, Enum):
     """Status of a network member."""
