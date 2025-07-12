@@ -90,8 +90,9 @@ def clone_syftbox_app() -> bool:
     # Ensure apps directory exists
     apps_path.mkdir(parents=True, exist_ok=True)
     
-    # Repository URL (this would be the actual GitHub repo when published)
-    repo_url = "https://github.com/iamtrask/syft-awake.git"
+    # Repository URL - for now, we'll use a fallback approach
+    # TODO: Update this to the actual public repo URL when available
+    repo_url = "https://github.com/OpenMined/syft-awake.git"
     target_path = apps_path / "syft-awake"
     
     try:
@@ -134,6 +135,52 @@ def clone_syftbox_app() -> bool:
         return False
     except Exception as e:
         logger.error(f"Unexpected error during clone: {e}")
+        return False
+
+
+def copy_bundled_app_to_syftbox() -> bool:
+    """
+    Copy the bundled syftbox_app to SyftBox/apps directory.
+    This uses the app bundle included with the Python package.
+    
+    Returns:
+        True if successful, False otherwise
+    """
+    apps_path = get_syftbox_apps_path()
+    if not apps_path:
+        return False
+    
+    # Find the bundled app directory
+    current_file = Path(__file__).resolve()
+    bundled_app_path = current_file.parent / "syftbox_app"
+    
+    # Check if bundled app exists
+    if not bundled_app_path.exists() or not (bundled_app_path / "run.sh").exists():
+        logger.debug("Bundled app not found")
+        return False
+    
+    target_path = apps_path / "syft-awake"
+    
+    try:
+        import shutil
+        
+        # Remove existing directory if it exists
+        if target_path.exists():
+            shutil.rmtree(target_path)
+        
+        # Copy the bundled app
+        shutil.copytree(bundled_app_path, target_path)
+        
+        # Make run.sh executable
+        run_sh = target_path / "run.sh"
+        if run_sh.exists():
+            run_sh.chmod(0o755)
+        
+        logger.info(f"✅ Installed bundled syft-awake app to {target_path}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to copy bundled app: {e}")
         return False
 
 
@@ -209,13 +256,22 @@ def ensure_syftbox_app_installed(silent: bool = True) -> bool:
         if not silent:
             logger.info("SyftBox detected but syft-awake app not found. Attempting auto-installation...")
         
-        # First try copying local app (for development)
+        # Try installation methods in order of preference:
+        
+        # 1. Try copying local app (for development)
         if copy_local_app_to_syftbox():
             if not silent:
-                logger.info("✅ Local app installed successfully")
+                logger.info("✅ Local development app installed successfully")
             return True
         
-        # Fallback to git clone (for published releases)
+        # 2. Try copying bundled app (for PyPI releases)
+        if copy_bundled_app_to_syftbox():
+            if not silent:
+                logger.info("✅ Bundled app installed successfully")
+                logger.info("📝 App will automatically start with SyftBox")
+            return True
+        
+        # 3. Fallback to git clone (if repo is available)
         if clone_syftbox_app():
             if not silent:
                 logger.info("✅ App installed successfully from git")
@@ -223,7 +279,11 @@ def ensure_syftbox_app_installed(silent: bool = True) -> bool:
             return True
         else:
             if not silent:
-                logger.error("❌ Failed to install syft-awake app")
+                logger.warning("❌ Failed to install syft-awake app automatically")
+                logger.info("💡 Manual installation options:")
+                logger.info("   1. Run: syft-awake install")
+                logger.info("   2. Copy app manually to ~/SyftBox/apps/syft-awake")
+                logger.info("   3. Clone repo: git clone <repo-url> ~/SyftBox/apps/syft-awake")
             return False
     
     if not silent:
