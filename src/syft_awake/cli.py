@@ -403,6 +403,11 @@ def main():
     endpoints_parser = subparsers.add_parser("list-endpoints", help="List local RPC endpoints")
     endpoints_parser.set_defaults(func=cmd_list_endpoints)
     
+    # Troubleshooting command
+    troubleshoot_parser = subparsers.add_parser("troubleshoot", help="Get troubleshooting guide for common issues")
+    troubleshoot_parser.add_argument("issue", nargs="?", choices=["404", "timeout", "connection"], help="Specific issue to troubleshoot")
+    troubleshoot_parser.set_defaults(func=cmd_troubleshoot)
+    
     # Parse arguments
     args = parser.parse_args()
     

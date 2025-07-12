@@ -101,12 +101,13 @@ def ping_user(
         logger.info(f"📤 Pinging {user_email} with message: '{message}'")
         logger.debug(f"🔗 RPC URL: {url}")
         
-        # Send the RPC request
-        logger.debug(f"📋 Request body: {request.model_dump()}")
+        # Send the RPC request  
+        # Note: pingpong uses dataclass directly, let's try that approach
+        logger.debug(f"📋 Request body: {request}")
         
         future = rpc.send(
             url=url,
-            body=request.model_dump(),
+            body=request,  # Send the Pydantic model directly like pingpong
             expiry="30s",
             cache=False  # Always get fresh awakeness status
         )

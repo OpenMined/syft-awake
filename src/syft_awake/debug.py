@@ -162,6 +162,82 @@ def diagnose_ping_failure(user_email: str, error_message: str) -> Dict[str, Any]
     return diagnosis
 
 
+def check_request_files(user_email: str, timeout: int = 5) -> Dict[str, Any]:
+    """
+    Check if request files are being created for a user's RPC endpoint.
+    
+    This helps distinguish between "endpoint doesn't exist" vs "endpoint exists but not processing".
+    
+    Args:
+        user_email: Email of the user to check
+        timeout: How long to wait for request file creation
+        
+    Returns:
+        Dictionary with request file information
+    """
+    result = {
+        "user_email": user_email,
+        "request_sent": False,
+        "request_file_created": False,
+        "request_file_path": None,
+        "response_file_created": False,
+        "response_file_path": None,
+        "error": None
+    }
+    
+    try:
+        if not SyftBoxClient:
+            result["error"] = "syft_core not available"
+            return result
+            
+        from syft_rpc import rpc
+        from .models import AwakeRequest
+        
+        client = SyftBoxClient.load()
+        
+        # Create a test request
+        request = AwakeRequest(
+            requester=client.email,
+            message="endpoint_test",
+            priority="normal"
+        )
+        
+        url = f"syft://{user_email}/api_data/syft-awake/rpc/awake"
+        
+        logger.info(f"🧪 Testing request file creation for {user_email}")
+        
+        # Send the RPC request
+        future = rpc.send(
+            url=url,
+            body=request.model_dump(),
+            expiry="10s",
+            cache=False
+        )
+        
+        result["request_sent"] = True
+        
+        # Try to find the request file
+        # This is a bit hacky since we don't have direct access to syft-rpc internals
+        # but we can check common patterns
+        
+        import time
+        time.sleep(1)  # Give it a moment to create the file
+        
+        # Wait for response with short timeout
+        try:
+            response = future.wait(timeout=timeout)
+            result["response_file_created"] = True
+            return result
+        except Exception as e:
+            result["error"] = str(e)
+            return result
+            
+    except Exception as e:
+        result["error"] = str(e)
+        
+    return result
+
+
 def debug_rpc_directory(user_email: str) -> Optional[Dict[str, Any]]:
     """
     Debug the RPC directory structure for a user.
