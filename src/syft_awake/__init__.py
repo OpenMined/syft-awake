@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
@@ -35,7 +35,9 @@ def _repr_html_():
     """Display HTML representation of syft_awake module in Jupyter notebooks."""
     # Try to get network status
     try:
-        network_summary = ping_network()
+        # Import within function to avoid circular imports
+        from .client import ping_network as _ping_network
+        network_summary = _ping_network()
         
         # Generate table rows
         table_rows = ""
