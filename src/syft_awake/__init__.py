@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
@@ -30,12 +30,40 @@ __all__ = [
     "ping_network",
 ]
 
-# Clean up namespace completely
+# Add _repr_html_ for Jupyter notebook display
+def _repr_html_():
+    """Display HTML representation of syft_awake module in Jupyter notebooks."""
+    return """
+    <div style="border: 2px solid #007ACC; border-radius: 8px; padding: 20px; background-color: #f0f8ff; font-family: Arial, sans-serif;">
+        <h2 style="color: #007ACC; margin-top: 0;">🌐 Syft Awake v{version}</h2>
+        <p style="color: #333; font-size: 16px;">Network awakeness monitoring for SyftBox</p>
+        <div style="margin-top: 15px;">
+            <h3 style="color: #005999;">Available Functions:</h3>
+            <ul style="list-style-type: none; padding-left: 0;">
+                <li style="margin: 8px 0;">
+                    <code style="background-color: #e8f4f8; padding: 4px 8px; border-radius: 4px;">ping_user(email)</code> 
+                    - Check if a specific user is online
+                </li>
+                <li style="margin: 8px 0;">
+                    <code style="background-color: #e8f4f8; padding: 4px 8px; border-radius: 4px;">ping_network()</code> 
+                    - Check status of all network members
+                </li>
+            </ul>
+        </div>
+        <div style="margin-top: 15px; font-size: 14px; color: #666;">
+            <em>Fast, secure awakeness monitoring for the SyftBox network</em>
+        </div>
+    </div>
+    """.format(version=__version__)
+
 import sys as _sys
 _this_module = _sys.modules[__name__]
+_this_module._repr_html_ = _repr_html_
+
+# Clean up namespace completely
 _all_names = list(globals().keys())
 for _name in _all_names:
-    if _name not in __all__ and not _name.startswith('_') and _name not in ['__doc__', '__file__', '__name__', '__package__', '__path__', '__spec__', '__version__']:
+    if _name not in __all__ and not _name.startswith('_') and _name not in ['__doc__', '__file__', '__name__', '__package__', '__path__', '__spec__', '__version__', '_repr_html_']:
         try:
             delattr(_this_module, _name)
         except (AttributeError, ValueError):
