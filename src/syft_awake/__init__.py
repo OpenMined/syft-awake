@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
@@ -21,21 +21,12 @@ except Exception:
     pass
 
 # Import main functions for easy access
-from .client import ping_user, ping_network, is_awake, get_awake_users, has_syft_awake
-from .models import AwakeRequest, AwakeResponse, AwakeStatus
-from .discovery import add_known_user, remove_known_user, discover_network_members
+from .client import ping_user, ping_network
+from .models import AwakeStatus
 
 __all__ = [
     "ping_user",
     "ping_network", 
-    "is_awake",
-    "get_awake_users",
-    "has_syft_awake",
-    "add_known_user",
-    "remove_known_user", 
-    "discover_network_members",
-    "AwakeRequest",
-    "AwakeResponse", 
     "AwakeStatus",
 ]
 

@@ -2,270 +2,77 @@
 
 Fast, secure network awakeness monitoring for SyftBox - ping network members to see who's online and ready for interactive queries.
 
-## What is Syft Awake?
-
-Syft Awake allows SyftBox network members to ping each other to check if they're awake and available for real-time collaboration. Think of it as a "presence indicator" for the SyftBox decentralized network.
-
-**Key Features:**
-- 🔍 **Network Discovery**: Find other SyftBox members automatically
-- ⚡ **Fast Pings**: Quick awakeness checks with sub-second response times  
-- 🌐 **Bulk Scanning**: Check multiple users concurrently to see who's online
-- 🔒 **Secure**: Uses SyftBox RPC for authenticated, file-based communication
-- 📊 **Rich Status**: Get detailed availability info, workload, and capabilities
-- 🛠️ **Easy Integration**: Simple Python library and CLI interface
-
 ## Quick Start
 
 ### Installation
-
-**Option 1: Auto-Installation (Recommended)**
-
-Simply install and import the Python library - it will automatically install the SyftBox app when SyftBox is detected:
-
 ```bash
 pip install syft-awake
-# or: uv add syft-awake
 ```
 
-```python
-import syft_awake as sa  # Automatically installs to ~/SyftBox/apps/syft-awake
-```
-
-**Option 2: Manual Installation**
-
-```bash
-# Clone to SyftBox apps directory
-git clone https://github.com/iamtrask/syft-awake.git ~/SyftBox/apps/syft-awake
-
-# Or use the CLI
-syft-awake install
-```
-
-**Option 3: Development Installation**
-
-```bash
-# Clone for development
-git clone https://github.com/iamtrask/syft-awake.git
-cd syft-awake
-uv sync
-```
-
-The SyftBox app will automatically start with SyftBox and begin responding to awakeness pings.
-
-### Using the Python Library
-
+### Usage
 ```python
 import syft_awake as sa
 
 # Ping a specific user
-response = sa.ping_user("friend@example.com", "Are you free for a quick call?")
+response = sa.ping_user("friend@example.com", "Are you free for a call?")
 if response and response.status == sa.AwakeStatus.AWAKE:
     print(f"{response.responder} is awake: {response.message}")
 
-# Quick check if someone is awake
-if sa.is_awake("colleague@example.com"):
-    print("They're online!")
-
-# Scan the entire network
+# Scan the entire network (auto-discovers users with syft-awake)
 summary = sa.ping_network()
 print(f"Network awakeness: {summary.awakeness_ratio:.1%}")
 for user in summary.awake_users:
     print(f"✅ {user} is awake")
-
-# Get list of currently awake users
-awake_users = sa.get_awake_users()
-print(f"Online now: {', '.join(awake_users)}")
 ```
 
-### Using the CLI
+## What It Does
 
-```bash
-# Ping a specific user
-syft-awake ping friend@example.com --message "Quick question!"
+**Auto-Installation**: Simply importing the library automatically installs the SyftBox app to respond to pings.
 
-# Scan the network
-syft-awake scan
+**Network Discovery**: Automatically finds other SyftBox users who have syft-awake installed by scanning the local datasites directory.
 
-# Quick check who's awake
-syft-awake who-awake
+**Real-time Status**: Get detailed availability info including status (awake/busy/sleeping), workload level, and capabilities.
 
-# Add users to your network
-syft-awake add-user colleague@example.com
-syft-awake add-user mentor@example.com
-
-# Check specific users
-syft-awake check colleague@example.com,mentor@example.com
-
-# App management
-syft-awake app-status    # Check installation status
-syft-awake install      # Install app to SyftBox
-syft-awake reinstall    # Reinstall/update app
-```
-
-## How It Works
-
-### Server Side (Automatic)
-
-Every SyftBox user running syft-awake has a small server that:
-- Listens for awakeness pings at `syft://{user}/api_data/syft-awake/rpc/awake`
-- Responds with current status (awake/sleeping/busy) and availability info
-- Uses SyftBox's file-based RPC system for secure communication
-
-### Client Side (Your Code)
-
-Use the Python library to:
-- Ping individual users or scan the entire network
-- Get real-time awakeness status and availability
-- Build awakeness-aware applications and workflows
-
-## API Reference
+## API
 
 ### Core Functions
 
-**`ping_user(user_email, message="ping", priority="normal", timeout=30)`**
-- Ping a specific user to check awakeness
-- Returns `AwakeResponse` or `None` if no response
-
-**`is_awake(user_email, timeout=10)`**  
-- Quick boolean check if user is awake
-- Returns `True` if awake, `False` otherwise
-
-**`ping_network(user_emails=None, timeout=15)`**
-- Ping multiple users concurrently  
-- Returns `NetworkAwakenessSummary` with detailed results
-
-**`get_awake_users(user_emails=None, timeout=15)`**
-- Get list of currently awake users
-- Returns list of email addresses
+**`ping_user(email, message="ping")`** - Ping a specific user  
+**`ping_network(user_emails=None)`** - Ping multiple users (auto-discovers if no list provided)
 
 ### Status Types
-
-```python
-class AwakeStatus(Enum):
-    AWAKE = "awake"      # Available for interaction
-    SLEEPING = "sleeping" # Not available  
-    BUSY = "busy"        # Available but occupied
-    UNKNOWN = "unknown"   # Status unclear
-```
-
-### Response Model
-
-```python
-class AwakeResponse:
-    responder: str           # Email of responder
-    status: AwakeStatus      # Current status
-    message: str             # Custom message
-    timestamp: datetime      # When response was generated
-    workload: str           # Current workload level
-    capabilities: dict       # What they can help with
-    response_time_ms: float  # Response latency
-```
-
-## Network Discovery
-
-Syft Awake can automatically discover network members by:
-- Scanning SyftBox datasites and shared directories
-- Analyzing recent RPC interaction logs
-- Examining permission files for collaborative contacts
-
-You can also manually manage your network:
-
-```python
-from syft_awake.discovery import add_known_user, remove_known_user
-
-# Add users manually
-add_known_user("new-colleague@example.com")
-
-# Remove inactive users  
-remove_known_user("old-contact@example.com")
-```
-
-## Configuration
-
-The awakeness server can be configured via `~/.syftbox/api_data/syft-awake/awake_config.json`:
-
-```json
-{
-  "auto_respond": true,
-  "default_status": "awake", 
-  "default_message": "I'm awake and ready to help!",
-  "workload": "light",
-  "capabilities": {
-    "queries": true,
-    "collaboration": true,
-    "data_processing": true
-  }
-}
-```
+- `AwakeStatus.AWAKE` - Available for interaction  
+- `AwakeStatus.BUSY` - Available but occupied
+- `AwakeStatus.SLEEPING` - Not available
 
 ## Use Cases
 
-**Real-time Collaboration**
+**Team Collaboration**
 ```python
-# Check if team members are available before starting a meeting
-team = ["alice@company.com", "bob@company.com", "carol@company.com"]
-awake_team = sa.get_awake_users(team)
-if len(awake_team) >= 2:
+# Check if team is available before starting a meeting
+team_emails = ["alice@company.com", "bob@company.com"]  
+summary = sa.ping_network(user_emails=team_emails)
+if summary.awakeness_ratio > 0.5:
     print("Enough people online for the meeting!")
 ```
 
 **Distributed Computing**
 ```python
-# Find available nodes for distributed computation
-compute_nodes = ["node1@cluster.com", "node2@cluster.com", "node3@cluster.com"]
-available_nodes = []
-for node in compute_nodes:
-    response = sa.ping_user(node)
-    if response and response.status == sa.AwakeStatus.AWAKE and response.workload == "light":
-        available_nodes.append(node)
-print(f"Found {len(available_nodes)} available compute nodes")
+# Find available compute nodes
+summary = sa.ping_network()
+light_workload_users = [
+    user for user in summary.awake_users 
+    if sa.ping_user(user).workload == "light"
+]
 ```
 
-**Interactive Queries**
-```python
-# Find an expert who's available to answer questions
-experts = ["expert1@domain.com", "expert2@domain.com"]
-for expert in experts:
-    if sa.is_awake(expert):
-        print(f"💡 {expert} is available for questions!")
-        break
-```
+## How It Works
 
-## Development
-
-### Local Testing
-
-```bash
-# Install dependencies
-uv sync
-
-# Run the server
-./run.sh
-
-# Test the CLI
-uv run python -m syft_awake.cli ping test@example.com
-```
-
-### Running Tests
-
-```bash
-uv run pytest tests/
-```
-
-## Security & Privacy
-
-- Uses SyftBox's authenticated RPC system
-- No central servers - fully decentralized
-- Users control their own awakeness status and responses
-- All communication goes through SyftBox's secure file sync
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
+- **Server**: Each user runs a small SyftBox app that responds to awakeness pings
+- **Client**: Use this Python library to ping users and scan the network  
+- **Security**: Uses SyftBox's authenticated, file-based RPC system
+- **Discovery**: Automatically finds users by scanning `/SyftBox/datasites/*/app_data/syft-awake`
 
 ## License
 
-Apache 2.0 - see LICENSE file for details.
+Apache 2.0
