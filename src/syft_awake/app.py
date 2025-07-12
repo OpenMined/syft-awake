@@ -58,6 +58,7 @@ except ImportError as e:
     Request = object
 
 from .models import AwakeRequest, AwakeResponse, AwakeStatus
+from .location import detect_country
 
 
 class AwakeServer:
@@ -112,7 +113,8 @@ class AwakeServer:
                 "queries": True,
                 "collaboration": True,
                 "data_processing": True
-            }
+            },
+            "location_enabled": True
         }
         
         if self.config_file.exists():
@@ -215,13 +217,19 @@ class AwakeServer:
         elif request.message and request.message != "ping":
             message = f"{message} Re: {request.message}"
         
+        # Detect location if enabled
+        country = None
+        if self.config.get("location_enabled", True):
+            country = detect_country(enabled=True)
+        
         # Build response
         response = AwakeResponse(
             responder=self.email,
             status=current_status,
             message=message,
             workload=self.config.get("workload", "light"),
-            capabilities=self.config.get("capabilities", {})
+            capabilities=self.config.get("capabilities", {}),
+            country=country
         )
         
         return response
@@ -239,6 +247,13 @@ class AwakeServer:
         self.config["workload"] = workload
         self.save_config()
         logger.info(f"⚡ Workload updated to: {workload}")
+    
+    def set_location_enabled(self, enabled: bool):
+        """Enable or disable location detection."""
+        self.config["location_enabled"] = enabled
+        self.save_config()
+        status = "enabled" if enabled else "disabled"
+        logger.info(f"🌍 Location detection {status}")
     
     def run(self):
         """Start the awakeness monitoring server."""

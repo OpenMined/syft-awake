@@ -66,6 +66,12 @@ class AwakeResponse(BaseModel):
         description="What the user can help with right now"
     )
     
+    # Location information
+    country: Optional[str] = Field(
+        default=None,
+        description="ISO 3166-1 alpha-2 country code (e.g., 'US', 'GB', 'DE')"
+    )
+    
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()
@@ -87,6 +93,12 @@ class NetworkAwakenessSummary(BaseModel):
         description="When this network scan was performed"
     )
     scan_duration_ms: float = Field(description="How long the scan took")
+    
+    # Location distribution
+    countries: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of awake users per country (ISO 3166-1 alpha-2 codes)"
+    )
     
     @property
     def awakeness_ratio(self) -> float:

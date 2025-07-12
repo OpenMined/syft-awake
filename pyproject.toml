@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "syft-awake"
-version = "0.2.1"
+version = "0.2.2"
 description = "Fast, secure network awakeness monitoring for SyftBox - ping members to see who's online and ready for interactive queries"
 readme = "README.md"
 license = "Apache-2.0"

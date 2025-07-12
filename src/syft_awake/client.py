@@ -53,7 +53,7 @@ except ImportError:
     SyftBoxClient = MockSyftBoxClient
     rpc = MockRPC()
 
-from .models import AwakeRequest, AwakeResponse, AwakeStatus
+from .models import AwakeRequest, AwakeResponse, AwakeStatus, NetworkAwakenessSummary
 
 
 def ping_user(
@@ -145,6 +145,71 @@ def ping_network(
     return responses
 
 
+def ping_network_summary(
+    user_emails: Optional[List[str]] = None,
+    timeout: int = 15
+) -> NetworkAwakenessSummary:
+    """
+    Ping multiple users and return a comprehensive summary with location data.
+    
+    Args:
+        user_emails: List of emails to ping (if None, discovers from known contacts)
+        timeout: Timeout per ping in seconds
+    
+    Returns:
+        NetworkAwakenessSummary with awakeness statistics and location distribution
+    
+    Example:
+        >>> import syft_awake as sa
+        >>> summary = sa.ping_network_summary()
+        >>> print(f"Awake: {summary.awake_count}/{summary.total_pinged}")
+        >>> print(f"Countries: {summary.countries}")
+    """
+    start_time = time.time()
+    
+    # If no user list provided, try to discover known contacts
+    if user_emails is None:
+        user_emails = discover_network_members()
+    
+    responses = []
+    awake_users = []
+    sleeping_users = []
+    non_responsive = []
+    countries = {}
+    
+    # Ping users sequentially and collect responses
+    for user_email in user_emails:
+        try:
+            response = ping_user(user_email, timeout=timeout)
+            if response is not None:
+                responses.append(response)
+                if response.status == AwakeStatus.AWAKE:
+                    awake_users.append(response.responder)
+                else:
+                    sleeping_users.append(response.responder)
+                
+                # Count countries for awake users
+                if response.country and response.status == AwakeStatus.AWAKE:
+                    countries[response.country] = countries.get(response.country, 0) + 1
+            else:
+                non_responsive.append(user_email)
+        except Exception:
+            non_responsive.append(user_email)
+    
+    scan_duration_ms = (time.time() - start_time) * 1000
+    
+    return NetworkAwakenessSummary(
+        total_pinged=len(user_emails),
+        awake_count=len(awake_users),
+        response_count=len(responses),
+        awake_users=awake_users,
+        sleeping_users=sleeping_users,
+        non_responsive=non_responsive,
+        scan_duration_ms=scan_duration_ms,
+        countries=countries
+    )
+
+
 def discover_network_members() -> List[str]:
     """Discover other SyftBox network members to ping."""
     from .discovery import discover_network_members as _discover
@@ -155,4 +220,5 @@ def discover_network_members() -> List[str]:
 __all__ = [
     "ping_user",
     "ping_network",
+    "ping_network_summary",
 ]
