@@ -99,8 +99,11 @@ def ping_user(
         url = f"syft://{user_email}/api_data/syft-awake/rpc/awake"
         
         logger.info(f"📤 Pinging {user_email} with message: '{message}'")
+        logger.debug(f"🔗 RPC URL: {url}")
         
         # Send the RPC request
+        logger.debug(f"📋 Request body: {request.model_dump()}")
+        
         future = rpc.send(
             url=url,
             body=request.model_dump(),
@@ -108,8 +111,14 @@ def ping_user(
             cache=False  # Always get fresh awakeness status
         )
         
+        logger.debug(f"🔮 Future created, waiting for response...")
+        
         # Wait for response
         response = future.wait(timeout=timeout)
+        
+        logger.debug(f"📥 Response status: {getattr(response, 'status_code', 'unknown')}")
+        logger.debug(f"📄 Raw response: {getattr(response, 'text', str(response))}")
+        
         response.raise_for_status()
         
         # Parse the response
@@ -119,8 +128,41 @@ def ping_user(
         return awake_response
         
     except Exception as e:
-        logger.warning(f"Failed to ping {user_email}: {e}")
+        error_msg = str(e)
+        
+        # Provide more helpful error messages for common scenarios
+        if "404" in error_msg or "not found" in error_msg.lower():
+            logger.info(f"📭 {user_email} is not running syft-awake (no awakeness endpoint found)")
+        elif "timeout" in error_msg.lower():
+            logger.info(f"⏰ {user_email} did not respond within {timeout}s")
+        elif "connection" in error_msg.lower():
+            logger.info(f"🔌 Could not connect to {user_email} (may be offline)")
+        else:
+            logger.warning(f"Failed to ping {user_email}: {e}")
+        
         return None
+
+
+def has_syft_awake(user_email: str, timeout: int = 5) -> bool:
+    """
+    Check if a user has syft-awake installed and running.
+    
+    Args:
+        user_email: Email of the user to check
+        timeout: Timeout in seconds
+    
+    Returns:
+        True if user has syft-awake endpoint available, False otherwise
+    
+    Example:
+        >>> import syft_awake as sa
+        >>> if sa.has_syft_awake("friend@example.com"):
+        ...     response = sa.ping_user("friend@example.com")
+        ... else:
+        ...     print("They don't have syft-awake installed")
+    """
+    response = ping_user(user_email, message="endpoint_check", timeout=timeout)
+    return response is not None
 
 
 def is_awake(user_email: str, timeout: int = 10) -> bool:

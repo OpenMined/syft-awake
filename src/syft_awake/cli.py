@@ -22,6 +22,7 @@ from .auto_install import (
     is_syftbox_running,
     get_syftbox_apps_path
 )
+from .debug import check_rpc_endpoint, list_local_rpc_endpoints, diagnose_ping_failure
 
 
 def cmd_ping(args):
@@ -41,6 +42,13 @@ def cmd_ping(args):
     
     if response is None:
         print(f"❌ No response from {args.user}")
+        
+        # Provide debug suggestions
+        print(f"\n💡 Debug suggestions:")
+        print(f"   • Run: syft-awake debug {args.user}")
+        print(f"   • Check if {args.user} has syft-awake installed")
+        print(f"   • Verify their SyftBox is running and syncing")
+        
         return 1
     
     status_emoji = {
@@ -262,6 +270,64 @@ def cmd_app_status(args):
     return 0
 
 
+def cmd_debug(args):
+    """Debug RPC endpoint issues."""
+    try:
+        from syft_core import Client as SyftBoxClient
+        client = SyftBoxClient.load()
+        user_email = args.user or client.email
+    except:
+        user_email = args.user or "unknown"
+    
+    print(f"🔍 Debugging RPC endpoint for {user_email}")
+    
+    result = check_rpc_endpoint(user_email)
+    
+    print(f"\n📋 Endpoint Status:")
+    print(f"   User: {result['user_email']}")
+    print(f"   Endpoint exists: {'✅' if result['endpoint_exists'] else '❌'}")
+    print(f"   Schema exists: {'✅' if result['schema_exists'] else '❌'}")
+    print(f"   Permissions exist: {'✅' if result['permissions_exists'] else '❌'}")
+    
+    if result['files_found']:
+        print(f"\n📁 Files found:")
+        for file in result['files_found']:
+            print(f"   • {file}")
+    
+    if result['errors']:
+        print(f"\n❌ Errors:")
+        for error in result['errors']:
+            print(f"   • {error}")
+    
+    if args.json:
+        print(f"\n{json.dumps(result, indent=2)}")
+    
+    return 0
+
+
+def cmd_list_endpoints(args):
+    """List local RPC endpoints."""
+    print("📡 Local RPC Endpoints:")
+    
+    endpoints = list_local_rpc_endpoints()
+    
+    if not endpoints:
+        print("   No RPC endpoints found")
+        return 0
+    
+    for endpoint in endpoints:
+        print(f"\n   App: {endpoint['app']}")
+        print(f"   Endpoint: /{endpoint['endpoint']}")
+        print(f"   Path: {endpoint['path']}")
+        if endpoint['files']:
+            print(f"   Files: {', '.join(endpoint['files'])}")
+    
+    if args.json:
+        print(f"\n{json.dumps(endpoints, indent=2)}")
+    
+    return 0
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -328,6 +394,14 @@ def main():
     
     status_parser = subparsers.add_parser("app-status", help="Check syft-awake app installation status")
     status_parser.set_defaults(func=cmd_app_status)
+    
+    # Debug commands
+    debug_parser = subparsers.add_parser("debug", help="Debug RPC endpoint issues")
+    debug_parser.add_argument("user", nargs="?", help="User email to debug (defaults to self)")
+    debug_parser.set_defaults(func=cmd_debug)
+    
+    endpoints_parser = subparsers.add_parser("list-endpoints", help="List local RPC endpoints")
+    endpoints_parser.set_defaults(func=cmd_list_endpoints)
     
     # Parse arguments
     args = parser.parse_args()
