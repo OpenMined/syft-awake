@@ -5,7 +5,7 @@ Fast, secure awakeness monitoring that allows SyftBox network members to ping
 each other to check if they're online and ready for interactive queries.
 """
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 
 # Auto-install as SyftBox app if SyftBox is available
 try:
@@ -22,12 +22,14 @@ _client_mod = _importlib.import_module('.client', package=__name__)
 
 ping_user = _client_mod.ping_user
 ping_network = _client_mod.ping_network
+ping_network_summary = _client_mod.ping_network_summary
 
 del _importlib, _client_mod
 
 __all__ = [
     "ping_user",
     "ping_network",
+    "ping_network_summary",
 ]
 
 # Add _repr_html_ for Jupyter notebook display
@@ -36,8 +38,8 @@ def _repr_html_():
     # Try to get network status
     try:
         # Import within function to avoid circular imports
-        from .client import ping_network as _ping_network
-        network_summary = _ping_network()
+        from .client import ping_network_summary as _ping_network_summary
+        network_summary = _ping_network_summary()
         
         # Generate table rows
         table_rows = ""
@@ -164,8 +166,8 @@ class _NetworkStatus:
         """Display network status as HTML table."""
         try:
             # Import within method to avoid circular imports
-            from .client import ping_network as _ping_network
-            network_summary = _ping_network()
+            from .client import ping_network_summary as _ping_network_summary
+            network_summary = _ping_network_summary()
             
             # Generate table rows
             table_rows = ""
