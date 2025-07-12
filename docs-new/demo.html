@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syft Awake - Live Demo</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .demo-section {
+            margin-bottom: var(--space-12);
+        }
+        
+        .demo-output {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: var(--space-4);
+            border-radius: 12px;
+            font-family: var(--font-mono);
+            margin-top: var(--space-3);
+            min-height: 100px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: var(--space-1);
+        }
+        
+        .status-online {
+            background: var(--color-success);
+        }
+        
+        .status-offline {
+            background: var(--color-error);
+        }
+        
+        .user-list {
+            display: grid;
+            gap: var(--space-2);
+            margin-top: var(--space-4);
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-2) var(--space-3);
+            background: var(--color-bg-light);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="hero">
+            <h1 class="hero-title">Try it live</h1>
+            <p class="hero-subtitle">See Syft Awake in action with this interactive demo</p>
+        </section>
+
+        <section class="demo-section">
+            <h2>Who's online right now?</h2>
+            <button class="btn btn-primary" onclick="simulatePingNetwork()">Ping Network</button>
+            
+            <div class="demo-output" id="network-output">
+                <p style="color: #6b7280;">Click "Ping Network" to see who's online...</p>
+            </div>
+            
+            <div class="user-list" id="user-list" style="display: none;">
+                <!-- Populated by JavaScript -->
+            </div>
+        </section>
+
+        <section class="demo-section">
+            <h2>Check specific user</h2>
+            <div style="display: flex; gap: var(--space-2); margin-bottom: var(--space-3);">
+                <input type="email" 
+                       id="user-email" 
+                       placeholder="colleague@university.edu" 
+                       style="flex: 1; padding: var(--space-2); border: 2px solid var(--color-border); border-radius: 8px; font-size: 16px;">
+                <button class="btn btn-primary" onclick="simulatePingUser()">Ping User</button>
+            </div>
+            
+            <div class="demo-output" id="user-output">
+                <p style="color: #6b7280;">Enter an email and click "Ping User"...</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Simulated user data
+        const simulatedUsers = [
+            { email: 'alice@lab.org', status: 'active', workload: 'light' },
+            { email: 'bob@university.edu', status: 'active', workload: 'heavy' },
+            { email: 'carol@research.net', status: 'idle', workload: 'light' },
+            { email: 'dave@institute.org', status: 'offline', workload: 'none' },
+            { email: 'eve@company.com', status: 'active', workload: 'medium' }
+        ];
+
+        function simulatePingNetwork() {
+            const output = document.getElementById('network-output');
+            const userList = document.getElementById('user-list');
+            
+            // Show loading
+            output.innerHTML = '<p style="color: #fbbf24;">Pinging network...</p>';
+            
+            setTimeout(() => {
+                const onlineUsers = simulatedUsers.filter(u => u.status !== 'offline');
+                
+                output.innerHTML = `<p style="color: #10b981;">Found ${onlineUsers.length} users online:</p>`;
+                
+                userList.innerHTML = onlineUsers.map(user => `
+                    <div class="user-item">
+                        <span class="status-indicator status-online"></span>
+                        <span style="flex: 1;">${user.email}</span>
+                        <span style="color: #6b7280;">Status: ${user.status} | Workload: ${user.workload}</span>
+                    </div>
+                `).join('');
+                
+                userList.style.display = 'grid';
+            }, 1000);
+        }
+
+        function simulatePingUser() {
+            const email = document.getElementById('user-email').value;
+            const output = document.getElementById('user-output');
+            
+            if (!email) {
+                output.innerHTML = '<p style="color: #ef4444;">Please enter an email address</p>';
+                return;
+            }
+            
+            output.innerHTML = `<p style="color: #fbbf24;">Pinging ${email}...</p>`;
+            
+            setTimeout(() => {
+                const user = simulatedUsers.find(u => u.email === email);
+                
+                if (user && user.status !== 'offline') {
+                    output.innerHTML = `
+                        <p style="color: #10b981;">✓ ${user.email} is ${user.status}</p>
+                        <p style="color: #6b7280;">Workload: ${user.workload}</p>
+                    `;
+                } else {
+                    output.innerHTML = `<p style="color: #ef4444;">✗ ${email} is offline or not found</p>`;
+                }
+            }, 800);
+        }
+    </script>
+</body>
+</html>

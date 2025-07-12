@@ -1,0 +1,339 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* 8px spacing system */
+    --space-1: 8px;
+    --space-2: 16px;
+    --space-3: 24px;
+    --space-4: 32px;
+    --space-5: 40px;
+    --space-6: 48px;
+    --space-7: 56px;
+    --space-8: 64px;
+    --space-10: 80px;
+    --space-12: 96px;
+    --space-16: 128px;
+    --space-20: 160px;
+
+    /* Colors */
+    --color-primary: #2563eb;
+    --color-primary-dark: #1d4ed8;
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-text: #1f2937;
+    --color-text-light: #6b7280;
+    --color-bg: #ffffff;
+    --color-bg-light: #f9fafb;
+    --color-bg-code: #f3f4f6;
+    --color-border: #e5e7eb;
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 var(--space-3);
+}
+
+/* Hero Section */
+.hero {
+    text-align: center;
+    padding: var(--space-16) 0 var(--space-10);
+}
+
+.hero-title {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: var(--space-3);
+    letter-spacing: -0.02em;
+}
+
+.hero-subtitle {
+    font-size: 20px;
+    color: var(--color-text-light);
+    font-weight: 400;
+}
+
+/* Install Section */
+.install {
+    text-align: center;
+    margin-bottom: var(--space-12);
+}
+
+.install-command {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--color-bg-code);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    padding: var(--space-3) var(--space-4);
+    font-size: 18px;
+}
+
+.install-command code {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.copy-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: var(--space-1) var(--space-2);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    background: var(--color-primary-dark);
+}
+
+.copy-btn.copied {
+    background: var(--color-success);
+}
+
+/* Example Section */
+.example {
+    margin-bottom: var(--space-16);
+}
+
+.example-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.example-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: var(--space-1) 0;
+}
+
+.example-label.before {
+    color: var(--color-error);
+}
+
+.example-label.after {
+    color: var(--color-success);
+}
+
+.example-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+.code-block {
+    background: var(--color-bg-code);
+    border: 2px solid var(--color-border);
+    border-radius: 12px;
+    padding: var(--space-4);
+    overflow-x: auto;
+}
+
+.before-code {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.after-code {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.code-block pre {
+    margin: 0;
+}
+
+.code-block code {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.8;
+    display: block;
+}
+
+/* Syntax Highlighting */
+.comment {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.keyword {
+    color: #7c3aed;
+    font-weight: 500;
+}
+
+.function {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.string {
+    color: #059669;
+}
+
+/* Features Section */
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    margin-bottom: var(--space-16);
+}
+
+.feature {
+    text-align: center;
+    padding: var(--space-6);
+    background: var(--color-bg-light);
+    border-radius: 16px;
+}
+
+.feature-icon {
+    font-size: 48px;
+    margin-bottom: var(--space-3);
+}
+
+.feature h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+}
+
+.feature p {
+    color: var(--color-text-light);
+    font-size: 16px;
+}
+
+/* API Section */
+.api {
+    margin-bottom: var(--space-16);
+}
+
+.api h2 {
+    font-size: 40px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: var(--space-8);
+    letter-spacing: -0.01em;
+}
+
+.api-example {
+    margin-bottom: var(--space-6);
+}
+
+.api-example h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: var(--space-2);
+    color: var(--color-text-light);
+}
+
+/* CTA Section */
+.cta {
+    text-align: center;
+    padding: var(--space-12) 0 var(--space-16);
+}
+
+.cta h2 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: var(--space-5);
+}
+
+.cta-buttons {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: var(--space-2) var(--space-4);
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border: 2px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+    background: var(--color-bg-light);
+    border-color: var(--color-text-light);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 40px;
+    }
+
+    .hero-subtitle {
+        font-size: 18px;
+    }
+
+    .example-header,
+    .example-content {
+        grid-template-columns: 1fr;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+
+    .api h2 {
+        font-size: 32px;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+}

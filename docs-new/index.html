@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syft Awake - See who's online in your SyftBox network</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1 class="hero-title">See who's online. Start collaborating.</h1>
+            <p class="hero-subtitle">Coordinate real-time AI research with your SyftBox network</p>
+        </section>
+
+        <!-- Quick Install -->
+        <section class="install">
+            <div class="install-command">
+                <code>pip install syft-awake</code>
+                <button class="copy-btn" onclick="copyToClipboard('pip install syft-awake')">Copy</button>
+            </div>
+        </section>
+
+        <!-- Before/After Example -->
+        <section class="example">
+            <div class="example-header">
+                <div class="example-label before">Before</div>
+                <div class="example-label after">After</div>
+            </div>
+            
+            <div class="example-content">
+                <div class="code-block before-code">
+                    <pre><code><span class="comment"># Start federated learning...</span>
+<span class="comment"># Hope collaborators are online?</span>
+<span class="comment"># 🤷 No idea who's available</span>
+
+result = start_experiment()
+<span class="comment"># ❌ Failed: Alice is offline</span></code></pre>
+                </div>
+
+                <div class="code-block after-code">
+                    <pre><code><span class="keyword">import</span> syft_awake <span class="keyword">as</span> sa
+
+<span class="comment"># Check who's online first!</span>
+responses = sa.<span class="function">ping_network</span>()
+online = [r.responder <span class="keyword">for</span> r <span class="keyword">in</span> responses]
+
+<span class="keyword">if</span> <span class="string">"alice@lab.org"</span> <span class="keyword">in</span> online:
+    result = start_experiment()
+    <span class="comment"># ✅ Success!</span></code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section class="features">
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <h3>Instant Setup</h3>
+                <p>Auto-installs with SyftBox. Just import and use.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Privacy-First</h3>
+                <p>Secure peer-to-peer pings. No central servers.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-Time</h3>
+                <p>Know who's online before starting experiments.</p>
+            </div>
+        </section>
+
+        <!-- Simple API -->
+        <section class="api">
+            <h2>Two functions. That's it.</h2>
+            
+            <div class="api-example">
+                <h3>Check one person</h3>
+                <div class="code-block">
+                    <pre><code>response = sa.<span class="function">ping_user</span>(<span class="string">"colleague@university.edu"</span>)
+<span class="keyword">if</span> response:
+    <span class="function">print</span>(<span class="string">f"{response.responder} is {response.status}"</span>)</code></pre>
+                </div>
+            </div>
+
+            <div class="api-example">
+                <h3>Check everyone</h3>
+                <div class="code-block">
+                    <pre><code>responses = sa.<span class="function">ping_network</span>()
+online_now = [r.responder <span class="keyword">for</span> r <span class="keyword">in</span> responses]
+<span class="function">print</span>(<span class="string">f"Online: {', '.join(online_now)}"</span>)</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta">
+            <h2>Ready to coordinate better?</h2>
+            <div class="cta-buttons">
+                <a href="https://github.com/iamtrask/syft-awake" class="btn btn-primary">View on GitHub</a>
+                <a href="#" class="btn btn-secondary">Read Docs</a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
